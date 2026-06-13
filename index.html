@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Putzplan – Eiscafé Nico</title>
+<meta name="theme-color" content="#141f1b">
+<meta name="description" content="Reinigungs- und Aufgabenplan für Eiscafé Nico – offline nutzbar">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141f1b;
+  --bg-grad:#0e1613;
+  --surface:#1c2b26;
+  --surface-2:#24372f;
+  --surface-3:#2d4239;
+  --border:rgba(255,255,255,0.07);
+  --border-strong:rgba(255,255,255,0.14);
+  --text:#f5efe6;
+  --text-muted:#a39a8e;
+  --text-faint:#6e6459;
+  --font-display:'Fraunces',serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --shadow: 0 10px 30px -10px rgba(0,0,0,.5);
+
+  --c-kueche:#8fd9b6;
+  --c-gastraum:#f4a988;
+  --c-gasteklo:#7ec8e3;
+  --c-personal:#cdb6e8;
+  --c-draussen:#e8b86d;
+  --c-sonstiges:#f5a3c0;
+}
+
+*{box-sizing:border-box;}
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--text);
+  background:
+    radial-gradient(900px 500px at 12% -8%, rgba(143,217,182,.10), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgba(244,169,136,.10), transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* ---------- Header ---------- */
+header{
+  padding:clamp(20px,5vw,34px) 20px 14px;
+  max-width:1040px;
+  margin:0 auto;
+}
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.eyebrow .scoop-mark{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--c-gastraum);
+  box-shadow:0 0 0 3px rgba(244,169,136,.18);
+}
+h1{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:clamp(30px,6.5vw,44px);
+  margin:0 0 4px;
+  letter-spacing:.005em;
+  color:var(--text);
+}
+.date-line{
+  color:var(--text-muted);
+  font-size:14px;
+  margin-bottom:18px;
+  text-transform:capitalize;
+}
+
+/* ---------- Ruhetag banner ---------- */
+.banner{
+  display:none;
+  align-items:center;
+  gap:10px;
+  background:linear-gradient(135deg, rgba(232,184,109,.22), rgba(232,184,109,.07));
+  border:1px solid rgba(232,184,109,.45);
+  color:#9a6a26;
+  border-radius:14px;
+  padding:11px 16px;
+  font-size:13.5px;
+  margin-bottom:16px;
+}
+.banner.show{ display:flex; }
+.banner .ico{ font-size:18px; }
+
+/* ---------- Day selector ---------- */
+.day-row{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+  margin-bottom:18px;
+}
+.day-btn{
+  font-family:var(--font-body);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:9px 4px 10px;
+  text-align:center;
+  cursor:pointer;
+  color:var(--text-muted);
+  transition:all .15s ease;
+}
+.day-btn .dname{
+  font-size:11px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  display:block;
+  margin-bottom:3px;
+}
+.day-btn .dnum{
+  font-family:var(--font-mono);
+  font-size:15px;
+  font-weight:500;
+  color:var(--text);
+}
+.day-btn.today{ border-color:var(--border-strong); }
+.day-btn.today .dnum::after{
+  content:'';
+  display:block;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--c-gastraum);
+  margin:4px auto 0;
+}
+.day-btn.selected{
+  background:var(--surface-3);
+  border-color:var(--c-gastraum);
+  color:var(--text);
+  box-shadow:0 0 0 1px var(--c-gastraum) inset;
+}
+.day-btn.closed{
+  opacity:.45;
+  cursor:not-allowed;
+}
+.day-btn.closed .dnum{ color:var(--text-faint); }
+.day-btn.future{
+  opacity:.5;
+}
+
+/* ---------- Overall progress card ---------- */
+.overall{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 18px;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  transition:background .15s ease, border-color .15s ease;
+}
+.overall:hover{
+  background:var(--surface-2);
+  border-color:var(--border-strong);
+}
+.overall:focus-visible{
+  outline:2px solid var(--c-kueche);
+  outline-offset:2px;
+}
+.overall .ring{ flex:none; }
+.overall-text{
+  font-size:13px;
+  color:var(--text-muted);
+  line-height:1.5;
+}
+.overall-text strong{
+  color:var(--text);
+  font-family:var(--font-display);
+  font-size:19px;
+  font-weight:600;
+}
+.overall-sub{
+  font-size:12px;
+  color:var(--text-faint);
+  margin-top:2px;
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+.btn{
+  font-family:var(--font-body);
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:11px;
+  padding:10px 14px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  transition:transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.btn svg{ width:16px; height:16px; flex:none; }
+.btn:hover{ background:var(--surface-3); transform:translateY(-1px); border-color:var(--border-strong); }
+.btn:active{ transform:translateY(0); }
+.btn.primary{ background:var(--c-gastraum); color:#4a2a18; border-color:transparent; }
+.btn.primary:hover{ background:#f7c0a4; }
+.btn.install{
+  background:linear-gradient(135deg, var(--c-kueche), var(--c-gasteklo));
+  color:#1c3a30;
+  border-color:transparent;
+  display:none;
+}
+.btn.install.show{ display:inline-flex; }
+.btn.install:hover{ filter:brightness(1.06); }
+input[type=file]{ display:none; }
+
+/* ---------- Grid of tiles ---------- */
+main{
+  max-width:1040px;
+  margin:0 auto;
+  padding:6px 20px 70px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:16px;
+  margin-top:20px;
+}
+.tile{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:22px 20px 24px;
+  cursor:pointer;
+  overflow:hidden;
+  transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  text-align:left;
+  animation:rise .4s ease both;
+}
+@keyframes rise{
+  from{ opacity:0; transform:translateY(10px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+.tile:hover{
+  transform:translateY(-3px);
+  border-color:var(--tile-color);
+  background:var(--surface-2);
+  box-shadow:0 14px 34px -16px var(--tile-color);
+}
+.tile:focus-visible{
+  outline:2px solid var(--tile-color);
+  outline-offset:3px;
+}
+.scoop{
+  position:absolute;
+  top:-30px;
+  right:-30px;
+  width:90px;
+  height:90px;
+  border-radius:62% 38% 55% 45% / 55% 45% 60% 40%;
+  background:var(--tile-color);
+  opacity:.22;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.tile:hover .scoop{ opacity:.34; transform:scale(1.08); }
+.tile-icon{
+  font-size:26px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:var(--tile-color);
+  margin-bottom:16px;
+}
+.tile-name{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:19px;
+  margin:0 0 6px;
+  color:var(--text);
+}
+.tile-progress-text{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--text-muted);
+}
+.tile-bar{
+  margin-top:13px;
+  height:6px;
+  border-radius:4px;
+  background:rgba(60,40,20,.08);
+  overflow:hidden;
+}
+.tile-bar-fill{
+  height:100%;
+  background:var(--tile-color);
+  border-radius:4px;
+  transition:width .25s ease;
+}
+.tile.complete .tile-bar-fill{
+  box-shadow:0 0 10px var(--tile-color);
+}
+.tile-check{
+  position:absolute;
+  top:16px; right:16px;
+  width:26px;height:26px;
+  border-radius:50%;
+  background:var(--tile-color);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  color:#10241c;
+}
+.tile.complete .tile-check{ display:flex; }
+
+/* ---------- Modal ---------- */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(5,10,9,.62);
+  backdrop-filter:blur(3px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+  z-index:50;
+}
+.overlay.open{ opacity:1; pointer-events:auto; }
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-bottom:none;
+  width:100%;
+  max-width:640px;
+  max-height:90vh;
+  border-radius:24px 24px 0 0;
+  padding:22px 22px calc(26px + env(safe-area-inset-bottom));
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .28s cubic-bezier(.32,.72,0,1);
+}
+.overlay.open .panel{ transform:translateY(0); }
+@media (min-width:680px){
+  .overlay{ align-items:center; }
+  .panel{ border-radius:24px; border-bottom:1px solid var(--border); max-height:82vh; }
+}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.panel-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:24px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--text);
+}
+.panel-title .dot{
+  width:14px;height:14px;border-radius:50%;
+  background:var(--tile-color);
+}
+.panel-sub{
+  font-size:12px;
+  color:var(--text-muted);
+  margin-top:4px;
+  font-family:var(--font-mono);
+}
+.close-btn{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text-muted);
+  font-size:18px;
+  cursor:pointer;
+  line-height:1;
+  width:36px;height:36px;
+  border-radius:50%;
+  flex:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.close-btn:hover{ color:var(--text); background:var(--surface-3); }
+
+.group{ margin-top:20px; }
+.group-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.group-label{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--tile-color);
+}
+.group-period{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  color:var(--text-faint);
+}
+.task{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:10px 4px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  user-select:none;
+}
+.task:last-child{ border-bottom:none; }
+.checkbox{
+  flex:none;
+  width:23px;height:23px;
+  border-radius:7px;
+  border:2px solid var(--text-faint);
+  margin-top:1px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .15s ease;
+}
+.task.done .checkbox{
+  background:var(--tile-color);
+  border-color:var(--tile-color);
+  transform:scale(1.06);
+}
+.checkbox svg{
+  width:13px;height:13px;
+  opacity:0;
+  transform:scale(.5);
+  transition:all .15s ease;
+}
+.task.done .checkbox svg{ opacity:1; transform:scale(1); }
+.task-text{
+  font-size:14.5px;
+  line-height:1.4;
+  padding-top:1px;
+}
+.task.done .task-text{
+  color:var(--text-muted);
+  text-decoration:line-through;
+}
+.task.locked{
+  cursor:not-allowed;
+  opacity:.5;
+}
+
+.panel-footer{
+  margin-top:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.reset-link{
+  background:none;
+  border:none;
+  color:var(--text-faint);
+  font-size:12px;
+  text-decoration:underline;
+  cursor:pointer;
+  padding:4px 0;
+}
+.reset-link:hover{ color:var(--text-muted); }
+
+footer{
+  text-align:center;
+  color:var(--text-faint);
+  font-size:12px;
+  padding:10px 20px 50px;
+}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translate(-50%,20px);
+  background:var(--surface-3);
+  border:1px solid var(--border-strong);
+  color:var(--text);
+  padding:12px 20px;
+  border-radius:12px;
+  font-size:13px;
+  box-shadow:var(--shadow);
+  opacity:0;
+  pointer-events:none;
+  transition:all .25s ease;
+  z-index:100;
+  max-width:90vw;
+  text-align:center;
+}
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+/* ---------- Floating Install Banner ---------- */
+.install-banner{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translate(-50%, 120%);
+  width:min(440px, calc(100vw - 24px));
+  background:linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  border:1px solid var(--border-strong);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  z-index:200;
+  transition:transform .35s ease;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom));
+}
+.install-banner.show{
+  transform:translate(-50%, 0);
+}
+.install-banner .ib-icon{
+  width:42px; height:42px; flex:none;
+  border-radius:11px;
+  background:linear-gradient(135deg, var(--c-kueche), var(--c-gasteklo));
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+}
+.install-banner .ib-body{ flex:1; min-width:0; }
+.install-banner .ib-title{
+  font-weight:700;
+  font-size:13.5px;
+  margin-bottom:2px;
+}
+.install-banner .ib-text{
+  font-size:12px;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.install-banner .ib-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:none;
+}
+.install-banner .ib-btn{
+  font-family:var(--font-body);
+  font-size:12.5px;
+  font-weight:700;
+  border:none;
+  border-radius:9px;
+  padding:8px 12px;
+  cursor:pointer;
+  background:linear-gradient(135deg, var(--c-kueche), var(--c-gasteklo));
+  color:#1c3a30;
+  white-space:nowrap;
+}
+.install-banner .ib-btn:hover{ filter:brightness(1.06); }
+.install-banner .ib-dismiss{
+  background:transparent;
+  border:1px solid var(--border-strong);
+  color:var(--text-muted);
+}
+.install-banner .ib-dismiss:hover{ color:var(--text); }
+
+@media (max-width:420px){
+  .install-banner{ flex-wrap:wrap; }
+  .install-banner .ib-actions{ flex-direction:row; width:100%; }
+  .install-banner .ib-btn{ flex:1; text-align:center; }
+}
+
+/* printable report for PDF export – wird per Browser-Druckdialog
+   ("Als PDF speichern") erzeugt. Im normalen Betrieb unsichtbar,
+   beim Drucken (@media print) ist NUR dieser Block sichtbar. */
+#pdf-report{
+  display:none;
+  background:#ffffff;
+  color:#2a2a2a;
+  font-family:var(--font-body);
+  padding:36px;
+}
+#pdf-report .rep-head{
+  border-bottom:3px solid #2a2a2a;
+  padding-bottom:10px;
+  margin-bottom:14px;
+}
+#pdf-report .rep-title{
+  font-family:var(--font-display);
+  font-size:24px;
+  font-weight:700;
+}
+#pdf-report .rep-sub{
+  font-size:13px;
+  color:#888;
+  margin-top:2px;
+}
+#pdf-report .rep-meta{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  font-size:12.5px;
+  color:#444;
+  background:#f4f4f4;
+  border-radius:8px;
+  padding:10px 14px;
+  margin-bottom:20px;
+}
+#pdf-report .rep-meta-label{
+  font-weight:700;
+  color:#222;
+}
+#pdf-report .rep-sec{
+  margin-bottom:16px;
+  break-inside:avoid;
+}
+#pdf-report .rep-sec-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border-bottom:2px solid #ddd;
+  padding-bottom:5px;
+  margin-bottom:6px;
+}
+#pdf-report .rep-sec-icon{ font-size:18px; }
+#pdf-report .rep-sec-name{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:15px;
+  flex:1;
+}
+#pdf-report .rep-sec-count{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:#666;
+}
+#pdf-report .rep-grp{
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#999;
+  margin:8px 0 3px;
+}
+#pdf-report .rep-row{
+  font-size:13px;
+  padding:2px 0 2px 2px;
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+#pdf-report .rep-mark{
+  font-weight:700;
+  width:16px;
+  flex:none;
+}
+#pdf-report .rep-done .rep-mark{ color:#1a8a52; }
+#pdf-report .rep-open .rep-mark{ color:#bbb; }
+#pdf-report .rep-open .rep-text{ color:#999; }
+
+/* Beim Drucken / "Als PDF speichern": nur den Bericht zeigen,
+   den Rest der App komplett ausblenden. */
+@media print{
+  body *{ visibility:hidden; }
+  #pdf-report, #pdf-report *{ visibility:visible; }
+  #pdf-report{
+    display:block !important;
+    position:absolute;
+    left:0; top:0;
+    width:100%;
+    margin:0;
+    padding:14mm;
+  }
+  .toast, .install-banner, .overlay{ display:none !important; }
+}
+
+@media (max-width:420px){
+  .day-row{ gap:5px; }
+  .day-btn{ padding:8px 2px 9px; border-radius:11px; }
+  .day-btn .dname{ font-size:9.5px; }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow"><span class="scoop-mark"></span>Eiscafé Nico</div>
+  <h1>Putzplan</h1>
+  <div class="date-line" id="dateLine"></div>
+
+  <div class="banner" id="ruhetagBanner">
+    <span class="ico">☕</span>
+    <span>Heute ist Ruhetag – das Café ist geschlossen. Wöchentliche und sonstige Aufgaben kannst du trotzdem erledigen.</span>
+  </div>
+
+  <div class="day-row" id="dayRow"></div>
+
+  <div class="overall" id="overallCard" role="button" tabindex="0">
+    <svg class="ring" id="overallRing" width="48" height="48" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#8fd9b6" stroke-width="6"
+        stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6"
+        id="overallRingFill" transform="rotate(-90 24 24)"/>
+    </svg>
+    <div class="overall-text">
+      Erledigt für diesen Tag<br>
+      <strong id="overallText">0 / 0</strong>
+      <div class="overall-sub">inkl. Aufgaben dieser Woche &amp; dieses Monats</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn install" id="installBtn" title="App auf dem Startbildschirm installieren">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+      App installieren
+    </button>
+    <button class="btn primary" id="exportJsonBtn" title="Spielstand als Datei sichern">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Sichern (.json)
+    </button>
+    <button class="btn" id="importBtn" title="Gespeicherte Datei laden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Laden
+    </button>
+    <input type="file" id="importInput" accept="application/json">
+    <button class="btn" id="exportPdfBtn" title="Tagesbericht als PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Bericht (PDF)
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>Putzplan &amp; Aufgaben — Eiscafé Nico · läuft komplett offline · Häkchen werden lokal &amp; mit Datum gespeichert</footer>
+
+<div class="overlay" id="overlay">
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="pdf-report"></div>
+
+<div class="install-banner" id="installBanner">
+  <div class="ib-icon">🍦</div>
+  <div class="ib-body">
+    <div class="ib-title">App installieren</div>
+    <div class="ib-text" id="installBannerText">Putzplan auf den Startbildschirm legen – schneller Zugriff, läuft offline.</div>
+  </div>
+  <div class="ib-actions">
+    <button class="ib-btn" id="installBannerBtn">Installieren</button>
+    <button class="ib-btn ib-dismiss" id="installBannerDismiss">Später</button>
+  </div>
+</div>
+
+<script>
+/* ===========================================================
+   DATA
+   freq: 'daily' | 'weekly' | 'monthly' | 'asneeded'
+=========================================================== */
+const sections = [
+  {
+    id: 'kueche',
+    name: 'Küche',
+    icon: '🍳',
+    color: 'var(--c-kueche)',
+    groups: [
+      { label: 'Täglich', freq: 'daily', tasks: [
+        'Geschirrspüler reinigen',
+        'Mikrowelle reinigen',
+        'Kühlschränke und Gefrierschränke reinigen',
+        'Ablagen abwischen'
+      ]},
+      { label: 'Einmal in der Woche', freq: 'weekly', tasks: [
+        'Regale abwischen plus Heizung abwischen'
+      ]}
+    ]
+  },
+  {
+    id: 'gastraum',
+    name: 'Gästeraum',
+    icon: '🛋️',
+    color: 'var(--c-gastraum)',
+    groups: [
+      { label: 'Täglich', freq: 'daily', tasks: [
+        'Boden saugen und wischen',
+        'Eistheke Scheibe sauber machen',
+        'Papierkörbe leeren'
+      ]},
+      { label: 'Wöchentlich, nach Bedarf', freq: 'weekly', tasks: [
+        'Tischbeine sauber machen'
+      ]},
+      { label: 'Einmal im Monat', freq: 'monthly', tasks: [
+        'Sitzbänke sauber machen, abwischen'
+      ]}
+    ]
+  },
+  {
+    id: 'gasteklo',
+    name: 'Gäste-WC',
+    icon: '🚻',
+    color: 'var(--c-gasteklo)',
+    groups: [
+      { label: 'Täglich', freq: 'daily', tasks: [
+        'Toilette reinigen',
+        'Waschbecken reinigen',
+        'Ablagen abwischen',
+        'Hygieneartikel auffüllen',
+        'Fegen, wischen',
+        'Spiegel sauber machen'
+      ]},
+      { label: 'Einmal die Woche', freq: 'weekly', tasks: [
+        'Wände wischen, Wände sauber machen',
+        'Türen abwischen',
+        'Spinnnetz wegmachen'
+      ]}
+    ]
+  },
+  {
+    id: 'personal',
+    name: 'Personal-WC',
+    icon: '🧻',
+    color: 'var(--c-personal)',
+    groups: [
+      { label: 'Täglich', freq: 'daily', tasks: [
+        'Toilette reinigen',
+        'Waschbecken reinigen',
+        'Boden wischen'
+      ]},
+      { label: 'Einmal die Woche', freq: 'weekly', tasks: [
+        'Ablagerungsorte wischen, Staub wischen'
+      ]}
+    ]
+  },
+  {
+    id: 'draussen',
+    name: 'Draußen (Garten & Hof)',
+    icon: '🌳',
+    color: 'var(--c-draussen)',
+    groups: [
+      { label: 'Nach Bedarf', freq: 'asneeded', tasks: [
+        'Regenrinne sauber machen',
+        'Hof fegen',
+        'Unkraut ziehen',
+        'Stühle abfegen'
+      ]}
+    ]
+  },
+  {
+    id: 'sonstiges',
+    name: 'Sonstiges',
+    icon: '✨',
+    color: 'var(--c-sonstiges)',
+    groups: [
+      { label: 'Einmal die Woche', freq: 'weekly', tasks: [
+        'Kinderstühle abziehen und sauber machen'
+      ]}
+    ]
+  }
+];
+
+const FREQ_LABELS = {
+  daily:   'Heute',
+  weekly:  'Diese Woche',
+  monthly: 'Diesen Monat',
+  asneeded:'Jederzeit'
+};
+
+const WEEKDAY_NAMES = ['So','Mo','Di','Mi','Do','Fr','Sa']; // getDay() index
+const CLOSED_WEEKDAY = 3; // Mittwoch = Ruhetag
+
+/* ===========================================================
+   DATE / PERIOD HELPERS
+=========================================================== */
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function dateKey(d){
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function monthKey(d){
+  return d.getFullYear() + '-' + pad(d.getMonth()+1);
+}
+function isoWeekKey(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+  const weekNum = 1 + Math.round((date - firstThursday) / (7*24*3600*1000));
+  return date.getUTCFullYear() + '-W' + pad(weekNum);
+}
+function startOfWeek(d){
+  // Monday as first day
+  const date = new Date(d);
+  const diff = (date.getDay() + 6) % 7; // days since Monday
+  date.setDate(date.getDate() - diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function sameDay(a,b){ return dateKey(a) === dateKey(b); }
+
+const TODAY = new Date();
+let selectedDate = new Date(TODAY);
+
+function periodKeyFor(freq, dateForDaily){
+  if(freq === 'daily')   return dateKey(dateForDaily);
+  if(freq === 'weekly')  return isoWeekKey(TODAY);
+  if(freq === 'monthly') return monthKey(TODAY);
+  return 'persistent';
+}
+function taskId(secId, gi, ti){ return secId + '__' + gi + '__' + ti; }
+
+/* ===========================================================
+   STORAGE
+=========================================================== */
+const STORAGE_KEY = 'putzplan-eiscafe-nico-v1';
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.log) return parsed;
+    }
+  }catch(e){ /* ignore */ }
+  return { log: {} };
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('Speichern nicht möglich:', e); }
+}
+
+let state = loadState();
+
+function isDone(secId, gi, ti, freq, dateForDaily){
+  const pk = periodKeyFor(freq, dateForDaily);
+  return !!(state.log[pk] && state.log[pk][taskId(secId, gi, ti)]);
+}
+function setDone(secId, gi, ti, freq, dateForDaily, value){
+  const pk = periodKeyFor(freq, dateForDaily);
+  if(!state.log[pk]) state.log[pk] = {};
+  if(value) state.log[pk][taskId(secId, gi, ti)] = true;
+  else delete state.log[pk][taskId(secId, gi, ti)];
+  saveState();
+}
+
+function sectionCounts(sec){
+  let total = 0, done = 0;
+  sec.groups.forEach((g, gi) => g.tasks.forEach((t, ti) => {
+    total++;
+    if(isDone(sec.id, gi, ti, g.freq, selectedDate)) done++;
+  }));
+  return { total, done };
+}
+
+/* ===========================================================
+   RENDER: header date, banner, day row, ring
+=========================================================== */
+function renderHeader(){
+  const opts = { weekday:'long', day:'2-digit', month:'long', year:'numeric' };
+  document.getElementById('dateLine').textContent = TODAY.toLocaleDateString('de-DE', opts);
+
+  document.getElementById('ruhetagBanner').classList.toggle('show', TODAY.getDay() === CLOSED_WEEKDAY);
+
+  let total = 0, done = 0;
+  sections.forEach(sec => {
+    const c = sectionCounts(sec);
+    total += c.total;
+    done += c.done;
+  });
+  document.getElementById('overallText').textContent = done + ' / ' + total;
+  const circumference = 2 * Math.PI * 20;
+  const pct = total ? done/total : 0;
+  document.getElementById('overallRingFill').setAttribute('stroke-dasharray', circumference);
+  document.getElementById('overallRingFill').setAttribute('stroke-dashoffset', circumference * (1-pct));
+}
+
+function renderDayRow(){
+  const row = document.getElementById('dayRow');
+  row.innerHTML = '';
+  const monday = startOfWeek(TODAY);
+
+  for(let i=0; i<7; i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+
+    const isToday = sameDay(d, TODAY);
+    const isSelected = sameDay(d, selectedDate);
+    const isClosed = d.getDay() === CLOSED_WEEKDAY;
+    const isFuture = d > TODAY && !sameDay(d, TODAY);
+
+    const btn = document.createElement('button');
+    btn.className = 'day-btn';
+    if(isToday) btn.classList.add('today');
+    if(isSelected) btn.classList.add('selected');
+    if(isClosed) btn.classList.add('closed');
+    if(isFuture) btn.classList.add('future');
+
+    btn.innerHTML = `<span class="dname">${WEEKDAY_NAMES[d.getDay()]}</span><span class="dnum">${d.getDate()}</span>`;
+
+    if(isClosed){
+      btn.title = 'Ruhetag – Café geschlossen';
+      btn.disabled = true;
+    } else if(isFuture){
+      btn.title = 'Noch nicht verfügbar';
+      btn.disabled = true;
+    } else {
+      btn.addEventListener('click', () => {
+        selectedDate = d;
+        renderAll();
+      });
+    }
+    row.appendChild(btn);
+  }
+}
+
+/* ===========================================================
+   RENDER: grid of tiles
+=========================================================== */
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  sections.forEach(sec => {
+    const c = sectionCounts(sec);
+    const pct = c.total ? Math.round((c.done/c.total)*100) : 0;
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (c.total && c.done === c.total ? ' complete' : '');
+    tile.style.setProperty('--tile-color', sec.color);
+    tile.tabIndex = 0;
+    tile.innerHTML = `
+      <div class="scoop"></div>
+      <div class="tile-check">✓</div>
+      <div class="tile-icon">${sec.icon}</div>
+      <div class="tile-name">${sec.name}</div>
+      <div class="tile-progress-text">${c.done} / ${c.total} erledigt</div>
+      <div class="tile-bar"><div class="tile-bar-fill" style="width:${pct}%"></div></div>
+    `;
+    tile.addEventListener('click', () => openPanel(sec));
+    tile.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPanel(sec); }});
+    grid.appendChild(tile);
+  });
+}
+
+/* ===========================================================
+   RENDER: detail panel (modal)
+=========================================================== */
+const overlay = document.getElementById('overlay');
+const panel = document.getElementById('panel');
+
+function openPanel(sec){
+  panel.style.setProperty('--tile-color', sec.color);
+  const selOpts = { weekday:'short', day:'2-digit', month:'2-digit' };
+
+  let html = `
+    <div class="panel-head">
+      <div>
+        <div class="panel-title"><span class="dot"></span>${sec.icon} ${sec.name}</div>
+        <div class="panel-sub">${selectedDate.toLocaleDateString('de-DE', selOpts)}</div>
+      </div>
+      <button class="close-btn" id="closeBtn" aria-label="Schließen">✕</button>
+    </div>
+  `;
+  sec.groups.forEach((g, gi) => {
+    html += `<div class="group">
+      <div class="group-head">
+        <div class="group-label">${g.label}</div>
+        <div class="group-period">${FREQ_LABELS[g.freq]}</div>
+      </div>`;
+    g.tasks.forEach((t, ti) => {
+      const done = isDone(sec.id, gi, ti, g.freq, selectedDate);
+      html += `
+        <div class="task ${done?'done':''}" data-gi="${gi}" data-ti="${ti}">
+          <div class="checkbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#10191c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="task-text">${t}</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  });
+  html += `
+    <div class="panel-footer">
+      <span class="tile-progress-text" id="panelCounter"></span>
+      <button class="reset-link" id="resetBtn">Alle Häkchen dieser Karte zurücksetzen</button>
+    </div>
+  `;
+  panel.innerHTML = html;
+  updatePanelCounter(sec);
+
+  panel.querySelectorAll('.task').forEach(el => {
+    el.addEventListener('click', () => {
+      const gi = +el.dataset.gi, ti = +el.dataset.ti;
+      const g = sec.groups[gi];
+      const nowDone = !isDone(sec.id, gi, ti, g.freq, selectedDate);
+      setDone(sec.id, gi, ti, g.freq, selectedDate, nowDone);
+      el.classList.toggle('done', nowDone);
+      updatePanelCounter(sec);
+      renderGrid();
+      renderHeader();
+    });
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', closePanel);
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    sec.groups.forEach((g, gi) => g.tasks.forEach((t, ti) => setDone(sec.id, gi, ti, g.freq, selectedDate, false)));
+    openPanel(sec);
+    renderGrid();
+    renderHeader();
+    showToast('Häkchen zurückgesetzt.');
+  });
+
+  overlay.classList.add('open');
+}
+
+function updatePanelCounter(sec){
+  const c = sectionCounts(sec);
+  const el = document.getElementById('panelCounter');
+  if(el) el.textContent = c.done + ' / ' + c.total + ' erledigt';
+}
+
+function closePanel(){ overlay.classList.remove('open'); }
+overlay.addEventListener('click', e => { if(e.target === overlay) closePanel(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
+
+/* ===========================================================
+   RENDER: "Erledigt für diesen Tag" Übersicht
+=========================================================== */
+function openSummaryPanel(){
+  panel.style.setProperty('--tile-color', 'var(--c-kueche)');
+  const selOpts = { weekday:'long', day:'2-digit', month:'long', year:'numeric' };
+
+  let doneItems = [];
+  let totalCount = 0, doneCount = 0;
+
+  sections.forEach(sec => {
+    sec.groups.forEach((g, gi) => {
+      g.tasks.forEach((t, ti) => {
+        totalCount++;
+        if(isDone(sec.id, gi, ti, g.freq, selectedDate)){
+          doneCount++;
+          doneItems.push({ sec, t });
+        }
+      });
+    });
+  });
+
+  let html = `
+    <div class="panel-head">
+      <div>
+        <div class="panel-title"><span class="dot"></span>✅ Erledigt für diesen Tag</div>
+        <div class="panel-sub">${selectedDate.toLocaleDateString('de-DE', selOpts)}</div>
+      </div>
+      <button class="close-btn" id="closeBtn" aria-label="Schließen">✕</button>
+    </div>
+  `;
+
+  if(doneItems.length === 0){
+    html += `<div class="group"><div class="task-text" style="padding:16px 4px;color:var(--text-muted);">Für diesen Tag wurde noch nichts erledigt.</div></div>`;
+  } else {
+    const bySec = {};
+    doneItems.forEach(item => {
+      if(!bySec[item.sec.id]) bySec[item.sec.id] = { sec:item.sec, tasks:[] };
+      bySec[item.sec.id].tasks.push(item.t);
+    });
+    Object.values(bySec).forEach(group => {
+      html += `<div class="group">
+        <div class="group-head">
+          <div class="group-label" style="color:${group.sec.color}">${group.sec.icon} ${group.sec.name}</div>
+        </div>`;
+      group.tasks.forEach(t => {
+        html += `
+          <div class="task done" style="cursor:default;">
+            <div class="checkbox" style="background:${group.sec.color};border-color:${group.sec.color};">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10191c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div class="task-text">${t}</div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    });
+  }
+
+  html += `
+    <div class="panel-footer">
+      <span class="tile-progress-text">${doneCount} / ${totalCount} erledigt</span>
+    </div>
+  `;
+  panel.innerHTML = html;
+  document.getElementById('closeBtn').addEventListener('click', closePanel);
+  overlay.classList.add('open');
+}
+
+document.getElementById('overallCard').addEventListener('click', openSummaryPanel);
+document.getElementById('overallCard').addEventListener('keydown', e => {
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openSummaryPanel(); }
+});
+
+/* ===========================================================
+   TOAST
+=========================================================== */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ===========================================================
+   EXPORT / IMPORT JSON
+=========================================================== */
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'putzplan_eiscafe_nico_' + dateKey(TODAY) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Spielstand gespeichert.');
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importInput').click();
+});
+document.getElementById('importInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const imported = JSON.parse(reader.result);
+      if(imported && imported.log){
+        Object.keys(imported.log).forEach(period => {
+          state.log[period] = Object.assign({}, state.log[period] || {}, imported.log[period]);
+        });
+        saveState();
+        renderAll();
+        showToast('Daten erfolgreich importiert.');
+      } else {
+        showToast('Diese Datei enthält keine gültigen Putzplan-Daten.');
+      }
+    } catch(err){
+      showToast('Datei konnte nicht gelesen werden.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ===========================================================
+   EXPORT PDF (Tagesbericht)
+=========================================================== */
+document.getElementById('exportPdfBtn').addEventListener('click', () => {
+  const report = document.getElementById('pdf-report');
+  const dateStr = selectedDate.toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const generatedStr = TODAY.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) + ', ' +
+    TODAY.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+
+  let totalAll = 0, doneAll = 0;
+  sections.forEach(sec => {
+    const c = sectionCounts(sec);
+    totalAll += c.total;
+    doneAll += c.done;
+  });
+
+  let html = `
+    <div class="rep-head">
+      <div class="rep-title">🍦 Putzplan – Tagesbericht</div>
+      <div class="rep-sub">Eiscafé Nico</div>
+    </div>
+    <div class="rep-meta">
+      <div><span class="rep-meta-label">Datum:</span> ${dateStr}</div>
+      <div><span class="rep-meta-label">Erstellt am:</span> ${generatedStr}</div>
+      <div><span class="rep-meta-label">Gesamt:</span> ${doneAll} / ${totalAll} Aufgaben erledigt</div>
+    </div>
+  `;
+
+  sections.forEach(sec => {
+    const c = sectionCounts(sec);
+    html += `
+      <div class="rep-sec">
+        <div class="rep-sec-head" style="border-color:${secColorHex(sec.color)}">
+          <span class="rep-sec-icon">${sec.icon}</span>
+          <span class="rep-sec-name">${sec.name}</span>
+          <span class="rep-sec-count">${c.done} / ${c.total}</span>
+        </div>
+    `;
+    sec.groups.forEach((g, gi) => {
+      html += `<div class="rep-grp">${g.label} · ${FREQ_LABELS[g.freq]}</div>`;
+      g.tasks.forEach((t, ti) => {
+        const done = isDone(sec.id, gi, ti, g.freq, selectedDate);
+        html += `<div class="rep-row ${done?'rep-done':'rep-open'}">
+          <span class="rep-mark">${done?'✓':'○'}</span>
+          <span class="rep-text">${t}</span>
+        </div>`;
+      });
+    });
+    html += `</div>`;
+  });
+
+  report.innerHTML = html;
+
+  // Statt html2pdf (braucht CDN + Internet und liefert oft leere Seiten,
+  // wenn das Element off-screen liegt) nutzen wir den nativen
+  // Druckdialog des Browsers. Im Druckdialog kann als Drucker
+  // "Als PDF speichern" gewählt werden – funktioniert komplett offline.
+  const oldTitle = document.title;
+  document.title = 'Putzplan_Tagesbericht_' + dateKey(selectedDate);
+
+  const restoreTitle = () => { document.title = oldTitle; };
+  window.addEventListener('afterprint', restoreTitle, { once: true });
+
+  // kleine Verzögerung, damit der Browser das neu eingefügte HTML
+  // sicher gerendert hat, bevor der Druckdialog geöffnet wird
+  setTimeout(() => {
+    window.print();
+    // Fallback, falls "afterprint" auf manchen Mobilgeräten nicht feuert
+    setTimeout(restoreTitle, 1000);
+  }, 50);
+});
+
+/* Resolve a var(--c-xxx) reference to a hex color for the PDF (html2canvas can be picky with CSS vars) */
+function secColorHex(varRef){
+  const map = {
+    'var(--c-kueche)':   '#8fd9b6',
+    'var(--c-gastraum)': '#f4a988',
+    'var(--c-gasteklo)': '#7ec8e3',
+    'var(--c-personal)': '#cdb6e8',
+    'var(--c-draussen)': '#e8b86d',
+    'var(--c-sonstiges)':'#f5a3c0'
+  };
+  return map[varRef] || '#999999';
+}
+
+/* ===========================================================
+   INIT
+=========================================================== */
+function renderAll(){
+  renderHeader();
+  renderDayRow();
+  renderGrid();
+}
+renderAll();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+/* ===========================================================
+   PWA INSTALL: Toolbar-Button + schwebendes Banner
+=========================================================== */
+const INSTALL_DISMISS_KEY = 'putzplan-install-dismissed';
+const DISMISS_DAYS = 14; // nach "Später" erst nach X Tagen wieder zeigen
+
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById('installBtn');
+const installBanner = document.getElementById('installBanner');
+const installBannerBtn = document.getElementById('installBannerBtn');
+const installBannerDismiss = document.getElementById('installBannerDismiss');
+const installBannerText = document.getElementById('installBannerText');
+
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true; // iOS
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
+    || (window.navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function wasRecentlyDismissed(){
+  const ts = localStorage.getItem(INSTALL_DISMISS_KEY);
+  if(!ts) return false;
+  const days = (Date.now() - Number(ts)) / (1000*60*60*24);
+  return days < DISMISS_DAYS;
+}
+function hideInstallBanner(){
+  installBanner.classList.remove('show');
+}
+function dismissInstallBanner(){
+  localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+  hideInstallBanner();
+}
+function showInstallBanner(){
+  if(isStandalone() || wasRecentlyDismissed()) return;
+  installBanner.classList.add('show');
+}
+
+// Android / Chrome / Edge: native Installations-Prompt
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  installBtn.classList.add('show');
+  installBannerText.textContent = 'Putzplan auf den Startbildschirm legen – schneller Zugriff, läuft offline.';
+  installBannerBtn.textContent = 'Installieren';
+  showInstallBanner();
+});
+
+async function triggerInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if(outcome === 'accepted') showToast('App wird installiert …');
+  deferredInstallPrompt = null;
+  installBtn.classList.remove('show');
+  hideInstallBanner();
+}
+
+installBtn.addEventListener('click', triggerInstall);
+
+installBannerBtn.addEventListener('click', () => {
+  if(deferredInstallPrompt){
+    triggerInstall();
+  } else if(isIOS()){
+    showToast('Tippe unten auf "Teilen" und dann auf "Zum Home-Bildschirm"');
+  } else {
+    hideInstallBanner();
+  }
+});
+
+installBannerDismiss.addEventListener('click', dismissInstallBanner);
+
+window.addEventListener('appinstalled', () => {
+  installBtn.classList.remove('show');
+  deferredInstallPrompt = null;
+  hideInstallBanner();
+  showToast('App wurde installiert.');
+});
+
+// Beim ersten Laden: Banner zeigen, mit passendem Hinweis je Plattform.
+window.addEventListener('load', () => {
+  if(isStandalone()) return;
+
+  if(isIOS()){
+    // iOS feuert "beforeinstallprompt" nie – eigene Anleitung zeigen
+    installBannerText.textContent = 'Für die App-Installation: Tippe unten in Safari auf das Teilen-Symbol und wähle "Zum Home-Bildschirm".';
+    installBannerBtn.textContent = 'Verstanden';
+    setTimeout(showInstallBanner, 1200);
+  } else {
+    // Android/Chrome: kurz warten, ob "beforeinstallprompt" feuert.
+    // Falls nicht (z.B. weil bereits einmal abgelehnt, oder weil die
+    // Voraussetzungen knapp nicht erfüllt sind), trotzdem eine
+    // Anleitung zeigen, statt gar nichts anzuzeigen.
+    setTimeout(() => {
+      if(!deferredInstallPrompt){
+        installBannerText.textContent = 'Tippe oben rechts im Browser-Menü (⋮) auf "App installieren" bzw. "Zum Startbildschirm hinzufügen".';
+        installBannerBtn.textContent = 'Verstanden';
+      }
+      showInstallBanner();
+    }, 1500);
+  }
+});
+
+</script>
+</body>
+</html>
