@@ -1,0 +1,26 @@
+{
+  "name": "Putzplan – Eiscafé Nico",
+  "short_name": "Putzplan",
+  "description": "Reinigungs- und Aufgabenplan für Eiscafé Nico – offline nutzbar",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#2b2e30",
+  "theme_color": "#2b2e30",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
