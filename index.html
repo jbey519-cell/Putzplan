@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Putzplan – Eiscafé Nico</title>
+<meta name="theme-color" content="#141f1b">
+<meta name="description" content="Reinigungs- und Aufgabenplan für Eiscafé Nico – offline nutzbar">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="eyebrow"><span class="scoop-mark"></span>Eiscafé Nico</div>
+  <h1>Putzplan</h1>
+  <div class="date-line" id="dateLine"></div>
+
+  <div class="banner" id="ruhetagBanner">
+    <span class="ico">☕</span>
+    <span>Heute ist Ruhetag – das Café ist geschlossen. Wöchentliche und sonstige Aufgaben kannst du trotzdem erledigen.</span>
+  </div>
+
+  <div class="day-row" id="dayRow"></div>
+
+  <div class="overall" id="overallCard" role="button" tabindex="0">
+    <svg class="ring" id="overallRing" width="48" height="48" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#8fd9b6" stroke-width="6"
+        stroke-linecap="round" stroke-dasharray="125.6" stroke-dashoffset="125.6"
+        id="overallRingFill" transform="rotate(-90 24 24)"/>
+    </svg>
+    <div class="overall-text">
+      Erledigt für diesen Tag<br>
+      <strong id="overallText">0 / 0</strong>
+      <div class="overall-sub">inkl. Aufgaben dieser Woche &amp; dieses Monats</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn install" id="installBtn" title="App auf dem Startbildschirm installieren">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+      App installieren
+    </button>
+    <button class="btn primary" id="exportJsonBtn" title="Spielstand als Datei sichern">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Sichern (.json)
+    </button>
+    <button class="btn" id="importBtn" title="Gespeicherte Datei laden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Laden
+    </button>
+    <input type="file" id="importInput" accept="application/json">
+    <button class="btn" id="exportPdfBtn" title="Tagesbericht als PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Bericht (PDF)
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>Putzplan &amp; Aufgaben — Eiscafé Nico · läuft komplett offline · Häkchen werden lokal &amp; mit Datum gespeichert</footer>
+
+<div class="overlay" id="overlay">
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="pdf-report"></div>
+
+<div class="install-banner" id="installBanner">
+  <div class="ib-icon">🍦</div>
+  <div class="ib-body">
+    <div class="ib-title">App installieren</div>
+    <div class="ib-text" id="installBannerText">Putzplan auf den Startbildschirm legen – schneller Zugriff, läuft offline.</div>
+  </div>
+  <div class="ib-actions">
+    <button class="ib-btn" id="installBannerBtn">Installieren</button>
+    <button class="ib-btn ib-dismiss" id="installBannerDismiss">Später</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
