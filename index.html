@@ -2732,16 +2732,42 @@ document.getElementById('importInput').addEventListener('change', e => {
   reader.onload = () => {
     try{
       const imported = JSON.parse(reader.result);
-      if(imported && imported.log){
-        Object.keys(imported.log).forEach(period => {
-          state.log[period] = Object.assign({}, state.log[period] || {}, imported.log[period]);
-        });
-        saveState();
-        renderAll();
-        showToast('Daten erfolgreich importiert.');
-      } else {
+      // Backup-Format: { state, sections, activeDays, restDays, appTitles, ... }
+      // Legacy-Format: { log: {...} }
+      const importedLog = imported.state?.log || imported.log;
+      if(!imported || !importedLog){
         showToast('Diese Datei enthält keine gültigen Putzplan-Daten.');
+        return;
       }
+      // Log wiederherstellen
+      Object.keys(importedLog).forEach(period => {
+        state.log[period] = Object.assign({}, state.log[period] || {}, importedLog[period]);
+      });
+      saveState();
+      // Kacheln / Sektionen wiederherstellen
+      if(Array.isArray(imported.sections) && imported.sections.length){
+        sections.length = 0;
+        imported.sections.forEach(s => sections.push(s));
+        saveSections();
+      }
+      // Aktive Tage wiederherstellen
+      if(imported.activeDays && typeof imported.activeDays === 'object'){
+        Object.keys(imported.activeDays).forEach(k => { activeDays[k] = imported.activeDays[k]; });
+        saveActiveDays();
+      }
+      // Ruhetage wiederherstellen
+      if(Array.isArray(imported.restDays)){
+        restDays.length = 0;
+        imported.restDays.forEach(d => restDays.push(d));
+        saveRestDays();
+      }
+      // Titel wiederherstellen
+      if(imported.appTitles && typeof imported.appTitles === 'object'){
+        Object.assign(appTitles, imported.appTitles);
+        saveTitles();
+      }
+      renderAll();
+      showToast('✅ Backup vollständig wiederhergestellt.');
     } catch(err){
       showToast('Datei konnte nicht gelesen werden.');
     }
