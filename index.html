@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e0356f">
+<title>Unsere Woche</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Dancing+Script:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-top: #fff6f8;
+    --bg-bottom: #ffe2ea;
+    --card: #fffbfc;
+    --ink: #3d2430;
+    --muted: #a3808c;
+    --rose: #e0356f;
+    --rose-dark: #b91f56;
+    --rose-soft: rgba(224,53,111,0.09);
+    --rose-soft-2: rgba(224,53,111,0.16);
+    --gold: #d9a441;
+    --border: #f6dde6;
+    --shadow: 0 8px 24px -10px rgba(185,31,86,0.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg-top:#2a141d; --bg-bottom:#1c0e14; --card:#33181f; --ink:#f7e6ec;
+      --muted:#c9a3ae; --border:#4a2530; --rose-soft: rgba(224,53,111,0.16);
+      --rose-soft-2: rgba(224,53,111,0.26); --shadow: 0 8px 24px -10px rgba(0,0,0,0.5);
+    }
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    padding-bottom: 48px;
+    position:relative;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ---------- Schwebende Herzen (Ambiente) ---------- */
+  .heart-field{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+  .heart-field span{
+    position:absolute; bottom:-10%; font-size: 18px; opacity:.35; color: var(--rose);
+    animation: floatUp linear infinite;
+    filter: drop-shadow(0 0 2px rgba(224,53,111,0.15));
+  }
+  @keyframes floatUp{
+    0%{ transform: translateY(0) translateX(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.35; }
+    90%{ opacity:.25; }
+    100%{ transform: translateY(-115vh) translateX(var(--drift,20px)) rotate(25deg); opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .heart-field{ display:none; }
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; }
+  }
+
+  .app{ max-width: 480px; margin: 0 auto; padding: 22px 16px 10px; position:relative; z-index:1; }
+
+  .topbar{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px; }
+  .topbar h1{
+    font-family:'Playfair Display', serif; font-weight:700; font-size: 27px; margin: 0 0 6px;
+    display:flex; align-items:center; gap:8px; letter-spacing:.2px;
+  }
+  .topbar h1 .beat{ display:inline-block; animation: beat 1.8s ease-in-out infinite; transform-origin:center; }
+  @keyframes beat{ 0%,100%{ transform:scale(1);} 15%{ transform:scale(1.22);} 30%{ transform:scale(0.96);} 45%{ transform:scale(1.14);} 60%{ transform:scale(1);} }
+  .subtitle{ margin:0; font-family:'Dancing Script', cursive; font-size: 19px; color: var(--rose-dark); font-weight:600; line-height:1.3; }
+  .countdown-line{ margin: 3px 0 0; font-size:12px; color: var(--muted); }
+  .week-range{ margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+
+  .top-actions{ display:flex; gap:8px; flex:none; }
+  .icon-btn{
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--border);
+    background: var(--card); font-size:18px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex:none;
+    box-shadow: var(--shadow); transition: transform .15s ease;
+  }
+  .icon-btn:active{ transform: scale(0.92); }
+
+  /* ---------- Herz-Fortschrittsleiste ---------- */
+  .heart-progress{ display:flex; align-items:center; gap:6px; margin: 14px 0 18px; }
+  .heart-progress svg{ width:22px; height:22px; overflow:visible; }
+  .heart-progress .hp-icon path{ fill: var(--border); stroke:none; transition: fill .35s ease; }
+  .heart-progress .hp-icon.filled path{ fill: url(#heartGradient); }
+  .heart-progress .hp-icon.filled{ animation: pop .35s ease; }
+  @keyframes pop{ 0%{ transform:scale(0.6); } 60%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
+  .heart-progress .hp-label{ margin-left:6px; font-size:12px; color: var(--muted); }
+
+  /* ---------- Liebesnotiz ---------- */
+  .love-note{
+    background: linear-gradient(135deg, var(--rose-soft), var(--rose-soft-2));
+    border: 1px solid var(--rose-soft-2); border-radius:16px; padding: 13px 16px;
+    margin-bottom:16px; display:none; position:relative;
+  }
+  .love-note.show{ display:block; }
+  .love-note .quote-mark{
+    font-family:'Playfair Display', serif; font-size:34px; color: var(--rose); opacity:.5;
+    line-height:0; position:absolute; top:10px; left:10px;
+  }
+  .love-note p{ margin:0; padding-left:22px; font-size:14px; color: var(--rose-dark); font-weight:500; font-style:italic; }
+  .love-note .love-note-from{ display:block; margin-top:6px; padding-left:22px; font-size:11.5px; color: var(--muted); font-style:normal; }
+
+  .section-row{ display:flex; align-items:center; justify-content:space-between; margin: 4px 0 10px; }
+  .section-row .surprise-btn{
+    font-size:12.5px; background: var(--card); border:1px solid var(--border); color: var(--rose-dark);
+    padding: 8px 13px; border-radius:999px; cursor:pointer; font-weight:600; box-shadow: var(--shadow);
+    display:flex; align-items:center; gap:6px;
+  }
+  .section-row .surprise-btn:active{ transform: scale(0.96); }
+
+  .days{ display:flex; flex-direction:column; gap:11px; }
+  .day-card{
+    background: var(--card); border:1px solid var(--border); border-radius:18px;
+    padding: 14px 15px; cursor:pointer; box-shadow: var(--shadow);
+    transition: transform .15s ease, box-shadow .15s ease;
+    position:relative; overflow:hidden;
+  }
+  .day-card:active{ transform: scale(0.985); }
+  .day-card.has-items::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+    background: linear-gradient(180deg, var(--rose), var(--gold));
+  }
+  .day-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px; }
+  .day-name{ font-family:'Playfair Display', serif; font-weight:700; font-size:16px; }
+  .day-date{ font-size:12px; color: var(--muted); }
+  .day-today{ color: var(--rose-dark); }
+  .day-today .day-date{ color: var(--rose-dark); font-weight:600; }
+  .day-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .tag{
+    font-size:12px; background: var(--rose-soft); color: var(--rose-dark);
+    border-radius: 999px; padding: 4px 11px; display:inline-flex; align-items:center; gap:4px;
+  }
+  .day-empty{ font-size:12.5px; color: var(--muted); font-style: italic; }
+
+  /* Sheets */
+  .sheet-backdrop{
+    position:fixed; inset:0; background: rgba(45,15,25,0.45);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition: opacity .25s ease; z-index:20;
+  }
+  .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    background: var(--bg-top); width:100%; max-width:480px;
+    border-radius: 26px 26px 0 0; padding: 20px 18px calc(24px + env(safe-area-inset-bottom));
+    transform: translateY(100%); transition: transform .32s cubic-bezier(.2,.8,.3,1);
+    max-height: 85vh; overflow-y:auto;
+    box-shadow: 0 -12px 40px -10px rgba(185,31,86,0.25);
+  }
+  .sheet-backdrop.open .sheet{ transform: translateY(0); }
+  .sheet-handle{ width:38px; height:4px; border-radius:2px; background: var(--border); margin: 0 auto 14px; }
+  .sheet h2{ font-family:'Playfair Display', serif; font-size:20px; margin: 0 0 14px; }
+  .sheet h3{ font-size:13px; margin: 20px 0 8px; color: var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+
+  label{ display:block; font-size:12.5px; color: var(--muted); margin: 12px 0 5px; }
+  input[type=text], input[type=date], input.field, textarea.field{
+    width:100%; padding: 12px 14px; border-radius:12px; border:1px solid var(--border);
+    background:var(--card); font-size:14.5px; color: var(--ink); font-family: inherit;
+  }
+  textarea.field{ resize:vertical; min-height:64px; }
+  input:focus, textarea:focus{ outline:none; border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); }
+
+  .together-box{
+    margin-top:14px; background: var(--rose-soft); border-radius:12px;
+    padding: 12px 14px; font-size: 13.5px; color: var(--rose-dark); font-weight:600;
+    display:none;
+  }
+
+  .btn{
+    display:block; width:100%; text-align:center; padding: 13px; border-radius:14px;
+    border: 1px solid var(--border); background: var(--card); color: var(--ink);
+    font-size: 14.5px; font-weight:600; cursor:pointer; margin-top:9px;
+    transition: transform .15s ease;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn.primary{ background: linear-gradient(135deg, var(--rose), var(--rose-dark)); border-color: transparent; color:#fff; box-shadow: var(--shadow); }
+  .btn.ghost{ background:transparent; box-shadow:none; }
+
+  .chip-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .chip{
+    font-size:13px; padding: 9px 14px; border-radius:999px; border:1px solid var(--border);
+    background:var(--card); color: var(--ink); cursor:pointer; user-select:none;
+    transition: transform .12s ease;
+  }
+  .chip:active{ transform: scale(0.94); }
+  .chip.selected{ background: linear-gradient(135deg, var(--rose), var(--rose-dark)); border-color: transparent; color:#fff; }
+  .chip.custom{ border-style:dashed; color: var(--muted); }
+
+  .status-note{ font-size:11.5px; color: var(--muted); margin-top:10px; text-align:center; }
+  hr{ border:none; border-top:1px solid var(--border); margin: 18px 0 4px; }
+
+  /* ---------- Konfetti-Herzen bei voller Woche ---------- */
+  .confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:30; overflow:hidden; display:none; }
+  .confetti-layer.show{ display:block; }
+  .confetti-layer span{
+    position:absolute; top:-10%; font-size: 20px; animation: confettiFall 2.6s ease-in forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform: translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform: translateY(110vh) rotate(340deg); opacity:0; }
+  }
+
+  .celebrate-banner{
+    text-align:center; font-size:13.5px; color: var(--rose-dark); font-weight:600;
+    background: var(--rose-soft); border-radius:14px; padding:10px; margin: 4px 0 16px;
+    display:none;
+  }
+  .celebrate-banner.show{ display:block; animation: pop .4s ease; }
+</style>
+</head>
+<body>
+
+<div class="heart-field" id="heartField" aria-hidden="true"></div>
+<div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="heartGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e0356f"/>
+      <stop offset="100%" stop-color="#d9a441"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="app">
+  <div class="topbar">
+    <div>
+      <h1><span class="beat">💕</span> Unsere Woche</h1>
+      <p class="subtitle" id="togetherText"></p>
+      <p class="countdown-line" id="countdownLine"></p>
+      <p class="countdown-line" id="birthdayLine"></p>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="gearBtn" aria-label="Einstellungen">⚙️</button>
+    </div>
+  </div>
+  <div class="week-range" id="weekRange"></div>
+
+  <div class="heart-progress" id="heartProgress"></div>
+
+  <div class="love-note" id="loveNote">
+    <span class="quote-mark">"</span>
+    <p id="loveNoteText"></p>
+    <span class="love-note-from" id="loveNoteFrom"></span>
+  </div>
+
+  <div class="celebrate-banner" id="celebrateBanner">🎉 Eure ganze Woche ist verplant – schöne Zeit zu zweit!</div>
+
+  <div class="section-row">
+    <span style="font-size:13px; color:var(--muted); font-weight:600;">Eure Tage</span>
+    <button class="surprise-btn" id="surpriseBtn">🎲 Überrasch uns</button>
+  </div>
+
+  <div class="days" id="daysList"></div>
+</div>
+
+<!-- Tag-Sheet -->
+<div class="sheet-backdrop" id="dayBackdrop">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="daySheetTitle">Tag</h2>
+    <div class="chip-grid" id="chipGrid"></div>
+    <button class="btn ghost" id="dayDiceBtn">🎲 Zufällige Idee für diesen Tag</button>
+    <button class="btn primary" id="sheetDoneBtn">Fertig</button>
+  </div>
+</div>
+
+<!-- Einstellungen-Sheet -->
+<div class="sheet-backdrop" id="settingsBackdrop">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Einstellungen</h2>
+
+    <label>Dein Name</label>
+    <input type="text" id="nameField" placeholder="z. B. Christian">
+
+    <label>Name deines Partners / deiner Partnerin</label>
+    <input type="text" id="partnerField" placeholder="z. B. Sarah">
+
+    <label>Zusammen seit</label>
+    <input type="date" id="sinceField">
+
+    <div class="together-box" id="togetherBox"></div>
+
+    <h3>🎂 Geburtstage</h3>
+    <label>Dein Geburtstag</label>
+    <input type="date" id="birthdayMeField">
+
+    <label>Geburtstag deines Partners / deiner Partnerin</label>
+    <input type="date" id="birthdayPartnerField">
+
+    <h3>💌 Liebesnotiz der Woche</h3>
+    <label>Eine kleine Nachricht für euch beide (erscheint oben in der App)</label>
+    <textarea class="field" id="noteField" placeholder="z. B. Ich freu mich schon auf unser Date-Night am Freitag ♥"></textarea>
+
+    <button class="btn primary" id="saveSettingsBtn">Speichern</button>
+
+    <h3>Plan teilen</h3>
+    <button class="btn" id="shareBtn">📤 Senden über WhatsApp &amp; Co.</button>
+    <button class="btn ghost" id="downloadBtn">Als Datei herunterladen</button>
+    <button class="btn ghost" id="importBtn">Datei laden</button>
+    <input type="file" id="importFileInput" accept=".txt,.json,application/json" style="display:none;">
+    <div class="status-note" id="statusNote"></div>
+
+    <div id="installRow">
+      <h3>App installieren</h3>
+      <button class="btn primary" id="installBtn">📲 App herunterladen / installieren</button>
+      <div class="status-note" id="installNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const IDEAS = [
+  'Kochen','Filmabend','Spazieren gehen','Restaurant','Spieleabend','Ausschlafen',
+  'Radtour','Picknick','Museum','Baden gehen','Kuscheln','Überraschung',
+  'Eis essen','Zocken','Tanzen','Café-Date',
+  'Wanderung','Sonnenuntergang schauen','Yoga zu zweit','Backen','Wellness-Tag',
+  'Konzert','Kino','Flohmarkt','Fotoshooting','Sterne gucken','Lagerfeuer',
+  'Weinprobe','Brettspiel-Abend','Karaoke','Bowling','Minigolf','Schwimmen',
+  'Neues Rezept ausprobieren','Frühstück im Bett','Städtetrip','Bootstour',
+  'Klettern','Malen / Basteln','Podcast hören & quatschen','Massage geben',
+  'Escape Room','Grillen','Zoo- oder Tierparkbesuch','Botanischer Garten',
+  'Second-Hand-Shopping','Gemeinsam kochen für Freunde','Brunch','Angeln',
+  'Therme / Sauna','Bäckerei-Hopping','Gemeinsam Serie starten','Tagesausflug',
+  'Handwerken / DIY-Projekt','Musik machen'
+];
+const WEEKDAYS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const HEART_PATH = 'M12 21s-6.7-4.35-9.3-8.1C.8 9.9 1.9 6 5.4 5.1c2-.5 3.9.4 5 2 .1.1.2.1.3 0 1.1-1.6 3-2.5 5-2 3.5.9 4.6 4.8 2.7 7.8C18.7 16.65 12 21 12 21z';
+
+/* ---------- Wöchentlich wechselnde, dezente Farbthemen ---------- */
+const WEEKLY_THEMES = [
+  { name:'Rose',    light:{ bgTop:'#fff6f8', bgBottom:'#ffe2ea', rose:'#e0356f', roseDark:'#b91f56', gold:'#d9a441', border:'#f6dde6', soft:'224,53,111', soft2a:0.09, soft2b:0.16 },
+                     dark:{ bgTop:'#2a141d', bgBottom:'#1c0e14', card:'#33181f', border:'#4a2530', soft2a:0.16, soft2b:0.26 } },
+  { name:'Lavendel',light:{ bgTop:'#f8f5ff', bgBottom:'#ece1ff', rose:'#7c5cd6', roseDark:'#5b3fb0', gold:'#c9a441', border:'#e6dcf8', soft:'124,92,214', soft2a:0.09, soft2b:0.16 },
+                     dark:{ bgTop:'#1c1730', bgBottom:'#120f21', card:'#241d3a', border:'#33294f', soft2a:0.18, soft2b:0.28 } },
+  { name:'Salbei',  light:{ bgTop:'#f4faf6', bgBottom:'#e0f0e6', rose:'#3f8f63', roseDark:'#2a6b48', gold:'#c9a441', border:'#dcece2', soft:'63,143,99', soft2a:0.09, soft2b:0.16 },
+                     dark:{ bgTop:'#12241a', bgBottom:'#0d1a13', card:'#182e21', border:'#274a35', soft2a:0.16, soft2b:0.26 } },
+  { name:'Terrakotta', light:{ bgTop:'#fff7f2', bgBottom:'#ffe4d3', rose:'#c66a3d', roseDark:'#9c4f28', gold:'#d9a441', border:'#f6e1d2', soft:'198,106,61', soft2a:0.1, soft2b:0.17 },
+                     dark:{ bgTop:'#2a1810', bgBottom:'#1c0f0a', card:'#331e14', border:'#4a2f1f', soft2a:0.17, soft2b:0.27 } },
+  { name:'Ozean',   light:{ bgTop:'#f2fbfc', bgBottom:'#dcf0f4', rose:'#2a8fa3', roseDark:'#1c6c7c', gold:'#d9a441', border:'#d8ecef', soft:'42,143,163', soft2a:0.09, soft2b:0.16 },
+                     dark:{ bgTop:'#0f2226', bgBottom:'#0a1719', card:'#152c30', border:'#234448', soft2a:0.16, soft2b:0.26 } },
+  { name:'Malve',   light:{ bgTop:'#fdf5f8', bgBottom:'#f4dfe9', rose:'#a05580', roseDark:'#7a3c60', gold:'#d9a441', border:'#eeddE6', soft:'160,85,128', soft2a:0.09, soft2b:0.16 },
+                     dark:{ bgTop:'#241621', bgBottom:'#170e15', card:'#2e1c2a', border:'#452b3f', soft2a:0.16, soft2b:0.26 } },
+  { name:'Bernstein', light:{ bgTop:'#fffaf0', bgBottom:'#fbe9c8', rose:'#c28a1f', roseDark:'#966a13', gold:'#e0356f', border:'#f3e6c9', soft:'194,138,31', soft2a:0.1, soft2b:0.18 },
+                     dark:{ bgTop:'#241c0d', bgBottom:'#181305', card:'#2e2410', border:'#453419', soft2a:0.17, soft2b:0.27 } },
+  { name:'Taubenblau', light:{ bgTop:'#f5f8fc', bgBottom:'#e1e9f5', rose:'#4f6fa8', roseDark:'#37507e', gold:'#d9a441', border:'#dde5f2', soft:'79,111,168', soft2a:0.09, soft2b:0.16 },
+                     dark:{ bgTop:'#131a26', bgBottom:'#0d121b', card:'#1a2333', border:'#2a374d', soft2a:0.16, soft2b:0.26 } }
+];
+function getISOWeekNumber(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+function applyWeeklyTheme(){
+  const weekNum = getISOWeekNumber(currentMonday);
+  const theme = WEEKLY_THEMES[weekNum % WEEKLY_THEMES.length];
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const root = document.documentElement.style;
+  const L = theme.light, D = theme.dark;
+  root.setProperty('--rose', L.rose);
+  root.setProperty('--rose-dark', L.roseDark);
+  root.setProperty('--gold', L.gold);
+  root.setProperty('--rose-soft', `rgba(${L.soft},${isDark?D.soft2a:L.soft2a})`);
+  root.setProperty('--rose-soft-2', `rgba(${L.soft},${isDark?D.soft2b:L.soft2b})`);
+  if(isDark){
+    root.setProperty('--bg-top', D.bgTop);
+    root.setProperty('--bg-bottom', D.bgBottom);
+    root.setProperty('--card', D.card);
+    root.setProperty('--border', D.border);
+  } else {
+    root.setProperty('--bg-top', L.bgTop);
+    root.setProperty('--bg-bottom', L.bgBottom);
+    root.setProperty('--border', L.border);
+  }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content', L.rose);
+}
+
+function getMonday(d){
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function weekKeyOf(d){
+  const monday = getMonday(d);
+  return monday.toISOString().slice(0,10);
+}
+function datesForWeek(monday){
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate()+i);
+    return d;
+  });
+}
+function fmtDate(d){
+  return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' });
+}
+function isSameDate(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+const currentMonday = getMonday(new Date());
+const currentWeekKey = weekKeyOf(new Date());
+const dates = datesForWeek(currentMonday);
+const days = WEEKDAYS.map((name,i) => ({ key: dates[i].toISOString().slice(0,10), name, date: dates[i] }));
+const todayDate = new Date();
+
+const STATE_KEY = 'unsere-woche-state';
+const SETTINGS_KEY = 'unsere-woche-settings';
+
+let state = {};
+let settings = { name:'', partner:'', since:'', note:'', birthdayMe:'', birthdayPartner:'' };
+let activeDayKey = null;
+
+function loadState(){
+  try{ const raw = localStorage.getItem(STATE_KEY); if(raw){ const parsed = JSON.parse(raw); if(parsed.weekKey === currentWeekKey) state = parsed.days || {}; } }catch(e){}
+}
+function saveState(){
+  localStorage.setItem(STATE_KEY, JSON.stringify({ weekKey: currentWeekKey, days: state }));
+}
+function loadSettings(){
+  try{ const raw = localStorage.getItem(SETTINGS_KEY); if(raw) settings = Object.assign({name:'',partner:'',since:'',note:'',birthdayMe:'',birthdayPartner:''}, JSON.parse(raw)); }catch(e){}
+}
+function saveSettings(){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function togetherDuration(sinceStr){
+  if(!sinceStr) return null;
+  const since = new Date(sinceStr);
+  if(isNaN(since)) return null;
+  const now = new Date();
+  if(since > now) return null;
+  let years = now.getFullYear() - since.getFullYear();
+  let months = now.getMonth() - since.getMonth();
+  let days_ = now.getDate() - since.getDate();
+  if(days_ < 0){
+    months -= 1;
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    days_ += prevMonth.getDate();
+  }
+  if(months < 0){ years -= 1; months += 12; }
+  return { years, months, days: days_ };
+}
+function togetherText(){
+  const dur = togetherDuration(settings.since);
+  if(!dur) return 'Willkommen bei eurer gemeinsamen Woche';
+  const parts = [];
+  if(dur.years > 0) parts.push(dur.years + (dur.years===1 ? ' Jahr' : ' Jahre'));
+  if(dur.months > 0) parts.push(dur.months + (dur.months===1 ? ' Monat' : ' Monate'));
+  if(dur.years === 0 && dur.months === 0) parts.push(dur.days + (dur.days===1 ? ' Tag' : ' Tage'));
+  return 'Zusammen seit ' + parts.join(' und ') + ' ♥';
+}
+
+/* ---------- Countdown zum nächsten Monatsjubiläum ---------- */
+function nextAnniversaryCountdown(){
+  if(!settings.since) return '';
+  const since = new Date(settings.since);
+  if(isNaN(since)) return '';
+  const now = new Date(); now.setHours(0,0,0,0);
+  let next = new Date(now.getFullYear(), now.getMonth(), since.getDate());
+  if(next < now) next = new Date(now.getFullYear(), now.getMonth()+1, since.getDate());
+  const diffDays = Math.round((next - now) / 86400000);
+  if(diffDays === 0) return '🎉 Heute ist euer Monatsjubiläum!';
+  if(diffDays === 1) return '💞 Morgen ist euer nächstes Monatsjubiläum';
+  return '💞 Noch ' + diffDays + ' Tage bis zu eurem nächsten Monatsjubiläum';
+}
+
+/* ---------- Geburtstage: Countdown & Feier ---------- */
+function daysUntilNextBirthday(dateStr){
+  if(!dateStr) return null;
+  const bday = new Date(dateStr);
+  if(isNaN(bday)) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  let next = new Date(now.getFullYear(), bday.getMonth(), bday.getDate());
+  if(next < now) next = new Date(now.getFullYear()+1, bday.getMonth(), bday.getDate());
+  return Math.round((next - now) / 86400000);
+}
+function renderBirthdayLine(){
+  const entries = [];
+  if(settings.birthdayMe) entries.push({ label: settings.name || 'Dein Geburtstag', days: daysUntilNextBirthday(settings.birthdayMe) });
+  if(settings.birthdayPartner) entries.push({ label: settings.partner || 'Geburtstag deines Partners', days: daysUntilNextBirthday(settings.birthdayPartner) });
+
+  const todays = entries.filter(e => e.days === 0);
+  const line = document.getElementById('birthdayLine');
+  if(todays.length){
+    line.textContent = '🎉 Heute ist ' + todays.map(e => e.label).join(' & ') + ' Geburtstag – alles Gute!';
+    if(!window.__birthdayCelebrated){ window.__birthdayCelebrated = true; launchConfetti(30); }
+  } else if(entries.length){
+    entries.sort((a,b) => a.days - b.days);
+    const next = entries[0];
+    line.textContent = '🎂 Noch ' + next.days + (next.days===1?' Tag':' Tage') + ' bis ' + next.label + 's Geburtstag';
+  } else {
+    line.textContent = '';
+  }
+}
+
+function renderHeader(){
+  document.getElementById('togetherText').textContent = togetherText();
+  document.getElementById('countdownLine').textContent = nextAnniversaryCountdown();
+  renderBirthdayLine();
+  const first = dates[0], last = dates[6];
+  document.getElementById('weekRange').textContent = 'Diese Woche: ' + fmtDate(first) + ' – ' + fmtDate(last);
+  renderHeartProgress();
+  renderLoveNote();
+}
+
+function renderHeartProgress(){
+  const wrap = document.getElementById('heartProgress');
+  const filledCount = days.filter(d => (state[d.key]||[]).length > 0).length;
+  let hearts = '';
+  for(let i=0;i<7;i++){
+    const filled = i < filledCount;
+    hearts += `<svg class="hp-icon${filled?' filled':''}" viewBox="0 0 24 24"><path d="${HEART_PATH}"/></svg>`;
+  }
+  wrap.innerHTML = hearts + `<span class="hp-label">${filledCount} von 7 Tagen geplant</span>`;
+
+  const banner = document.getElementById('celebrateBanner');
+  banner.classList.toggle('show', filledCount === 7);
+  if(filledCount === 7 && !window.__celebrated){
+    window.__celebrated = true;
+    launchConfetti();
+  }
+}
+
+function renderLoveNote(){
+  const box = document.getElementById('loveNote');
+  const text = (settings.note||'').trim();
+  if(text){
+    document.getElementById('loveNoteText').textContent = text;
+    document.getElementById('loveNoteFrom').textContent = settings.name ? '– ' + settings.name : '';
+    box.classList.add('show');
+  } else {
+    box.classList.remove('show');
+  }
+}
+
+function renderDays(){
+  const list = document.getElementById('daysList');
+  list.innerHTML = days.map(d => {
+    const items = state[d.key] || [];
+    const isToday = isSameDate(d.date, todayDate);
+    const tags = items.length
+      ? items.map(i => `<span class="tag">♥ ${escapeHtml(i)}</span>`).join('')
+      : `<span class="day-empty">Noch nichts geplant</span>`;
+    return `
+      <div class="day-card ${items.length?'has-items':''}" data-key="${d.key}">
+        <div class="day-top ${isToday?'day-today':''}">
+          <span class="day-name">${d.name}${isToday?' · heute':''}</span>
+          <span class="day-date">${fmtDate(d.date)}</span>
+        </div>
+        <div class="day-tags">${tags}</div>
+      </div>`;
+  }).join('');
+  list.querySelectorAll('.day-card').forEach(card => {
+    card.addEventListener('click', () => openDaySheet(card.dataset.key));
+  });
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function openDaySheet(key){
+  activeDayKey = key;
+  const day = days.find(d => d.key === key);
+  document.getElementById('daySheetTitle').textContent = day.name + ', ' + fmtDate(day.date);
+  renderChips();
+  document.getElementById('dayBackdrop').classList.add('open');
+}
+function renderChips(){
+  const grid = document.getElementById('chipGrid');
+  const selected = state[activeDayKey] || [];
+  grid.innerHTML = IDEAS.map(idea => {
+    const on = selected.includes(idea);
+    return `<div class="chip ${on?'selected':''}" data-idea="${escapeHtml(idea)}">${idea}</div>`;
+  }).join('') + `<div class="chip custom">+ Eigene Idee</div>`;
+
+  grid.querySelectorAll('.chip[data-idea]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const idea = chip.dataset.idea;
+      const list = state[activeDayKey] || [];
+      const idx = list.indexOf(idea);
+      if(idx >= 0) list.splice(idx,1); else list.push(idea);
+      state[activeDayKey] = list;
+      saveState();
+      renderChips();
+    });
+  });
+  grid.querySelector('.chip.custom').addEventListener('click', () => {
+    const val = prompt('Eigene Idee:');
+    if(val && val.trim()){
+      const list = state[activeDayKey] || [];
+      list.push(val.trim());
+      state[activeDayKey] = list;
+      saveState();
+      renderChips();
+    }
+  });
+}
+document.getElementById('dayDiceBtn').addEventListener('click', () => {
+  const selected = state[activeDayKey] || [];
+  const remaining = IDEAS.filter(i => !selected.includes(i));
+  if(remaining.length === 0) return;
+  const pick = remaining[Math.floor(Math.random()*remaining.length)];
+  selected.push(pick);
+  state[activeDayKey] = selected;
+  saveState();
+  renderChips();
+});
+document.getElementById('sheetDoneBtn').addEventListener('click', () => {
+  document.getElementById('dayBackdrop').classList.remove('open');
+  renderDays();
+  renderHeader();
+});
+document.getElementById('dayBackdrop').addEventListener('click', (e) => {
+  if(e.target.id === 'dayBackdrop'){
+    document.getElementById('dayBackdrop').classList.remove('open');
+    renderDays(); renderHeader();
+  }
+});
+
+/* ---------- Überrasch uns: würfelt Ideen für alle leeren Tage ---------- */
+document.getElementById('surpriseBtn').addEventListener('click', () => {
+  const emptyDays = days.filter(d => (state[d.key]||[]).length === 0);
+  if(emptyDays.length === 0){
+    document.getElementById('statusNote').textContent = '';
+    launchConfetti(6);
+    return;
+  }
+  const usedGlobally = new Set(Object.values(state).flat());
+  emptyDays.forEach(d => {
+    let pool = IDEAS.filter(i => !usedGlobally.has(i));
+    if(pool.length === 0) pool = IDEAS;
+    const pick = pool[Math.floor(Math.random()*pool.length)];
+    usedGlobally.add(pick);
+    state[d.key] = [pick];
+  });
+  saveState();
+  renderDays();
+  renderHeader();
+});
+
+/* ---------- Einstellungen ---------- */
+function refreshTogetherBox(){
+  const box = document.getElementById('togetherBox');
+  const val = document.getElementById('sinceField').value;
+  const dur = togetherDuration(val);
+  if(dur){
+    const parts = [];
+    if(dur.years>0) parts.push(dur.years + (dur.years===1?' Jahr':' Jahre'));
+    if(dur.months>0) parts.push(dur.months + (dur.months===1?' Monat':' Monate'));
+    if(dur.years===0 && dur.months===0) parts.push(dur.days + (dur.days===1?' Tag':' Tage'));
+    box.textContent = '💕 Zusammen seit ' + parts.join(' und ');
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+}
+document.getElementById('gearBtn').addEventListener('click', () => {
+  document.getElementById('nameField').value = settings.name || '';
+  document.getElementById('partnerField').value = settings.partner || '';
+  document.getElementById('sinceField').value = settings.since || '';
+  document.getElementById('birthdayMeField').value = settings.birthdayMe || '';
+  document.getElementById('birthdayPartnerField').value = settings.birthdayPartner || '';
+  document.getElementById('noteField').value = settings.note || '';
+  refreshTogetherBox();
+  document.getElementById('settingsBackdrop').classList.add('open');
+});
+document.getElementById('settingsBackdrop').addEventListener('click', (e) => {
+  if(e.target.id === 'settingsBackdrop') document.getElementById('settingsBackdrop').classList.remove('open');
+});
+document.getElementById('sinceField').addEventListener('change', refreshTogetherBox);
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  settings.name = document.getElementById('nameField').value.trim();
+  settings.partner = document.getElementById('partnerField').value.trim();
+  settings.since = document.getElementById('sinceField').value;
+  settings.birthdayMe = document.getElementById('birthdayMeField').value;
+  settings.birthdayPartner = document.getElementById('birthdayPartnerField').value;
+  settings.note = document.getElementById('noteField').value.trim();
+  saveSettings();
+  renderHeader();
+  document.getElementById('settingsBackdrop').classList.remove('open');
+});
+
+/* Teilen / Senden / Laden */
+function buildPlanFile(){
+  const payload = { weekKey: currentWeekKey, days: state, note: settings.note || '', updatedBy: settings.name || 'unbekannt' };
+  return new Blob([JSON.stringify(payload)], { type: 'application/json' });
+}
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const blob = buildPlanFile();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'unsere-woche-' + currentWeekKey + '.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('statusNote').textContent = 'Datei gespeichert.';
+});
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const blob = buildPlanFile();
+  const file = new File([blob], 'unsere-woche-' + currentWeekKey + '.txt', { type: 'application/json' });
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{
+      await navigator.share({ files: [file], title: 'Unsere Woche', text: 'Unser Wochenplan' });
+      document.getElementById('statusNote').textContent = 'Gesendet.';
+    }catch(e){ /* abgebrochen */ }
+  } else {
+    document.getElementById('downloadBtn').click();
+    document.getElementById('statusNote').textContent = 'Teilen wird hier nicht unterstützt – Datei wurde stattdessen heruntergeladen, die kannst du manuell anhängen.';
+  }
+});
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFileInput').click();
+});
+document.getElementById('importFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.weekKey !== currentWeekKey){
+        alert('Diese Datei ist für eine andere Woche – nicht übernommen.');
+        return;
+      }
+      state = data.days || {};
+      if(typeof data.note === 'string'){ settings.note = data.note; saveSettings(); }
+      saveState();
+      renderDays(); renderHeader();
+      document.getElementById('statusNote').textContent = 'Übernommen von ' + (data.updatedBy || 'unbekannt') + '.';
+    }catch(err){
+      alert('Diese Datei konnte nicht gelesen werden.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ---------- Ambient: schwebende Herzen ---------- */
+function initHeartField(){
+  const field = document.getElementById('heartField');
+  const glyphs = ['💗','💕','♡','💞'];
+  const count = 10;
+  for(let i=0;i<count;i++){
+    const el = document.createElement('span');
+    el.textContent = glyphs[i % glyphs.length];
+    const left = Math.random()*100;
+    const duration = 14 + Math.random()*12;
+    const delay = Math.random()*16;
+    const size = 14 + Math.random()*14;
+    const drift = (Math.random()*60 - 30) + 'px';
+    el.style.left = left + 'vw';
+    el.style.fontSize = size + 'px';
+    el.style.animationDuration = duration + 's';
+    el.style.animationDelay = '-' + delay + 's';
+    el.style.setProperty('--drift', drift);
+    field.appendChild(el);
+  }
+}
+
+/* ---------- Konfetti-Herzen ---------- */
+function launchConfetti(count){
+  count = count || 24;
+  const layer = document.getElementById('confettiLayer');
+  const glyphs = ['💖','💕','💗','♡','🌸'];
+  layer.innerHTML = '';
+  layer.classList.add('show');
+  for(let i=0;i<count;i++){
+    const el = document.createElement('span');
+    el.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDelay = (Math.random()*0.6) + 's';
+    el.style.fontSize = (14 + Math.random()*14) + 'px';
+    layer.appendChild(el);
+  }
+  setTimeout(() => { layer.classList.remove('show'); layer.innerHTML=''; }, 3400);
+}
+
+/* Installierbarkeit */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installNote').textContent = '';
+});
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+document.getElementById('installBtn').addEventListener('click', async () => {
+  const note = document.getElementById('installNote');
+  if(isStandalone()){
+    note.textContent = 'Die App ist bereits installiert. ✓';
+    return;
+  }
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    note.textContent = choice.outcome === 'accepted' ? 'Installiert. ✓' : '';
+    return;
+  }
+  if(isIOS()){
+    note.textContent = 'Auf dem iPhone/iPad: Unten in Safari auf „Teilen" (□↑) tippen, dann „Zum Home-Bildschirm" wählen.';
+  } else {
+    note.textContent = 'Im Browser-Menü (⋮ oder …) nach „App installieren" oder „Zum Startbildschirm hinzufügen" suchen.';
+  }
+});
+if(isStandalone()){
+  document.getElementById('installNote').textContent = 'Die App ist bereits installiert. ✓';
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* Start */
+applyWeeklyTheme();
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyWeeklyTheme);
+}
+loadSettings();
+loadState();
+renderHeader();
+renderDays();
+initHeartField();
+</script>
+</body>
+</html>
